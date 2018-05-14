@@ -1,0 +1,65 @@
+---
+######################################################
+# Example configuration for netbox_joined_inventory.py
+######################################################
+netbox:
+    main:
+        # Server and API details
+        api_url: 'http://netbox.example.net/'
+        api_token: 'not_used'
+
+        # Output file path
+        inventory_output_file: '../data/inventory.ini'
+        hostvars_output_folder: '../data/host_vars/'
+
+        # Tenant filter - can be empty - lower case
+        tenant: 'demo'
+
+    # Enable join features for host_vars files
+    features:
+        # Join interfaces into devices
+        # True will report a list of interfaces of each device and 
+        # populate the attributes of each interface in the host_vars.
+        join_interfaces: True
+        # Join VLANs, VRF, Anycast IP over Prefix/VLAN Role into devices
+        # True will report a list of configured_vlans of each device and 
+        # populate the attributes of each VLAN in the host_vars.
+        # Required per vid: VLAN_domain, anycast_ip, vrf in prefix
+        join_vlan_roles: True
+
+    # Groups to create in inventory file
+    #
+    # The inventory file will contain a section for each
+    # of the following device attribute types:
+    #
+    group_by:
+        # Default section in Netbox
+        default:
+            - device_role
+            - platform
+            - site
+        # Custom sections (custom_fields) could be used
+        custom:
+            - securityblock
+
+    # Use Netbox sections as host variables.
+    host_vars:
+        # Sections related to IPs
+        ip:
+            ansible_host: primary_ip
+        # Any other sections
+        general:
+            name: name
+            device_role: device_role
+            platform: platform
+            site: site
+        # Custom sections (custom_fields) could be used as vars too
+        custom:
+            securityblock: securityblock
+            VLAN_domain: VLAN_domain
+            loopback_ip: loopback_ip
+            bgp_as: bgp_as
+            cluster_role: cluster_role
+            clagd_vxlan_anycast_ip: clagd_vxlan_anycast_ip
+            peerlink_mac: peerlink_mac
+

@@ -1,0 +1,29 @@
+---
+VLAN_domain: vlan_domain_leaf_dc1
+ansible_host: 192.168.1.88
+bgp_as: 65088
+cluster_role: master
+loopback_ip: 172.17.9.2/32
+name: leaf-dc1-02
+platform: CumulusLinux
+securityblock: dc1
+site: RZ
+peerlink_mac: 44:39:39:ff:40:22
+configured_vlans:
+- {anycast_ip: 192.168.108.1/24, cidr: 192.168.10.0/24, description: legacy-net-1, vid: 1, vrf: Server1}
+- {anycast_ip: 10.10.10.81/24, cidr: 10.10.10.0/24, description: legacy-net-2, vid: 2, vrf: Systeme1}
+- {anycast_ip: 192.168.89.1/24, cidr: 192.168.9.0/24, description: ext-3, vid: 9, vrf: Management1}
+device_role: leafs
+interfaces:
+- {address: 192.168.87.14/24, description: '', form_factor: QSFP+ (40GE), name: eth0, untagged_vlan: null, vrf: null}
+- {address: null, description: '', form_factor: Virtual, name: lo, untagged_vlan: null, vrf: null}
+- {address: null, description: '', form_factor: SFP+ (10GE), name: swp1, untagged_vlan: null, vrf: null}
+- {address: null, description: '', form_factor: SFP+ (10GE), name: swp2, untagged_vlan: null, vrf: null}
+- {address: null, description: '', form_factor: QSFP+ (40GE), name: swp52, untagged_vlan: null, vrf: null}
+- {address: null, description: '', form_factor: QSFP+ (40GE), name: swp53, untagged_vlan: null, vrf: null}
+- {address: null, description: '', form_factor: QSFP+ (40GE), name: swp54, untagged_vlan: null, vrf: null}
+configured_vrfs:
+- {description: '', gateway: 0.0.0.1, name: old_1}
+- {description: '', gateway: 0.0.0.2, name: Server1}
+- {description: '', gateway: 0.0.0.3, name: Systeme1}
+- {description: '', gateway: 0.0.0.4, name: Management1}
