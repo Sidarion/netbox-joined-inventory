@@ -13,50 +13,50 @@ source-of-truth and stores the data as Ansible inventory, group_vars
 and host_vars.
 
 The Ansible inventory will not contain configuration data - most
-configuration data is stored in host_vars yaml files.
+configuration data is stored in host_vars YAML files.
 
 Netbox_joined_inventory is not a *dynamic* inventory script for Ansible.
-A dynamic inventory script would imediately propagate changes in Netbox
+A dynamic inventory script would immediately propagate changes in Netbox
 to Ansible. Instead netbox_joined_inventory generates variables files.
 
 The generated files can be committed to a repository. That way
 differences to the previous set of configuration files can be reviewed
 before applying them via Ansible playbooks.
 
-The benefits are clear: an audit trail, traceability, re-producability,
+The benefits are clear: an audit trail, traceability, reproducibility,
 the possibility to roll back and a clean separation between playbook
 logic and sensitive config data.
 
-The script is specialiced for networking devices rather than servers. It
+The script is specialized for networking devices rather than servers. It
 features the following functionality:
 
 - Get an inventory of network devices from Netbox via API
-  - Build host groups for ansible. Condition configurable. E.g.
+  - Build host groups for Ansible. Condition configurable. E.g.
     Role(Spines/Leafs/Access), Platform, Network/Security zones, Site
   - Write to an Ansible inventory file. INI-like syntax.
 
 - Get all interfaces for each network device
-  - Write them to the host_vars files. Yaml syntax.
-  - Including Interface name, form/speed, IP addresses, untagged VLANs
+  - Write them to the host_vars files. YAML syntax.
+  - Including interface name, form/speed, IP addresses, untagged VLANs
 
-- Get configured VLANs for commmon device roles. All leafs in an network
+- Get configured VLANs for common device roles. All leafs in an network
   zone have the same VLAN/VXLAN configuration (see also
   [requirements.txt](requirements.txt))
-  - Write VLANs to the host_vars files. Yaml syntax.
+  - Write VLANs to the host_vars files. YAML syntax.
   - VLAN, VXLAN vni, Anycast IP, CIDR, VRF
 
 Target network architecture
 ===========================
 The currently implemented architecture targets a spine-leaf deployment
 over active-active datacenters - it works best within a scale of 50-4000
-VLANs. Despite the assumend spine-leaf architecture, the script is
+VLANs. Despite the assumed spine-leaf architecture, the script is
 written fairly generically and should be adaptable to other
 architectures and assumptions.
 
 Ansible has many supported network devices:
-http://docs.ansible.com/ansible/latest/modules/list_of_network_modules.html
+<http://docs.ansible.com/ansible/latest/modules/list_of_network_modules.html>
 
-Netbox_joined_inventory is primaraly tested with CumulusLinux(CL) and
+Netbox_joined_inventory is primarily tested with CumulusLinux(CL) and
 EdgeCore switches.
 
 VXLAN is the de facto technology for implementing network virtualization
@@ -73,10 +73,10 @@ to as the means of implementing controller-less VXLAN.
 
 Network simulation
 ------------------
-We simulate and test a network configuration before dploying to
+We simulate and test a network configuration before deploying to
 production. This is done using Vagrant and Cumulus VX, both of which are
-free to use. There is a very confortable prepared lab script for it:
-https://github.com/cumulusnetworks/cldemo-vagrant
+free to use. There is a very comfortable prepared lab script for it:
+<https://github.com/cumulusnetworks/cldemo-vagrant>
 
 There you can test the above mentioned features:
 
@@ -86,12 +86,12 @@ There you can test the above mentioned features:
 - EVPN on Cumulus Linux
 
 Basic playbooks for configuring the CL switches:
-https://github.com/CumulusNetworks/cldemo-automation-ansible
+<https://github.com/CumulusNetworks/cldemo-automation-ansible>
 
 Conventions and shortcuts
 =========================
 Data that is needed for the script to produce a complete output is
-further commented in the /requirement.ini file.
+further commented in the `/requirement.ini` file.
 
 - VLANs get available on a switch using the grouping object
   "Prefix/VLAN Roles". A switch will get all VLANs configured that
@@ -100,7 +100,7 @@ further commented in the /requirement.ini file.
 
 - VXLAN VNI will have a 1:1 mapping to the VLAN ID. This limits a
   possible scale but simplifies the VLAN ID management in smaller
-  depoyments.
+  deployments.
 
 - The selection of the BGP enabled interfaces are currently configured
   outside Netbox. E.g. All leaf switches use swp50-swp51
@@ -120,9 +120,9 @@ further commented in the /requirement.ini file.
 
 Run Configuration
 =================
-The configuration of netbox_joined_inventory is done in an separate yaml
+The configuration of netbox_joined_inventory is done in an separate YAML
 file. If the configuration file is not called
-netbox_joined_inventory.yml, then you need to pass it's name to the
+`netbox_joined_inventory.yml`, then you need to pass its name to the
 script via a parameter. Example:
 
 ```
@@ -139,7 +139,7 @@ This example configuration groups together devices-Prefix/VLAN Roles-prefixes
 
 Screenshots
 ===========
-The /screenshots directory contains some screenshots on how this looks
+The `/images` directory contains some screenshots on how this looks
 like in the Netbox web gui:
 
 ### Adding a device
