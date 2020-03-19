@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+# coding: utf-8
 
 # Copyright: (c) 2018, Mario Gersbach <https://www.sidarion.ch/>
 # Credits: Ahmed AbouZaid <http://aabouzaid.com/>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-# Version: 1.0.0
+# Version: 1.0.1
 
 import os
 import sys
@@ -13,8 +14,21 @@ from pathlib import Path
 import yaml
 import jinja2
 import argparse
-from functools import lru_cache
 from operator import itemgetter
+
+try:
+    from functools import lru_cache
+except ImportError:
+    from backports.functools_lru_cache import lru_cache
+
+# allow requests to access the local certificate bundle
+import os
+import platform
+
+ca_file = 'ca-certificates.crt' if (platform.dist()[0] == 'debian' or platform.dist()[0] == 'Ubuntu') else 'ca-bundle.crt'
+os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(
+        '/etc/ssl/certs/',
+            ca_file)
 
 try:
     import requests
@@ -77,7 +91,7 @@ class NetboxJoinedInventory(object):
         self.script_config = script_config_data
         self.api_url = self._config(["main", "api_url"])
         assert (re.match('^https?://', self.api_url, flags=0)), "Wrong URL syntax in config file for api_url!"
-        self.api_token = None # self._config(["main", "api_token"], default="", optional=True)
+        self.api_token = self._config(["main", "api_token"], default="", optional=True)
         self.group_by = self._config(["group_by"], default={})
         self.host_vars = self._config(["host_vars"], default={})
 
@@ -144,6 +158,7 @@ class NetboxJoinedInventory(object):
 
         return key_value
 
+    @lru_cache(maxsize=2048)
     def get_hosts_list(self, api_url, api_token=None, specific_id=None):
         """Retrieves hosts list from netbox API.
         Returns:
@@ -230,6 +245,10 @@ class NetboxJoinedInventory(object):
                 vrfs_cache[vrf_name]['gateway'] = vrf['custom_fields']['gateway']
             else:
                 vrfs_cache[vrf_name]['gateway'] = None
+            if "dhcp_relay_servers" in vrf['custom_fields']:
+                vrfs_cache[vrf_name]['dhcp_relay_servers'] = vrf['custom_fields']['dhcp_relay_servers']
+            else:
+                vrfs_cache[vrf_name]['dhcp_relay_servers'] = None
         return vrfs_cache
 
     @lru_cache(maxsize=2048)
@@ -264,7 +283,7 @@ class NetboxJoinedInventory(object):
         items_list = []
 
         # Pagination. Max 1000
-        api_url_params['limit'] = 256
+        api_url_params['limit'] = 1000
         while api_url:
             # Get list.
             api_output = requests.get(api_url, params=api_url_params, headers=api_url_headers)
@@ -438,8 +457,8 @@ class NetboxJoinedInventory(object):
     def generate_networking_host_vars(self, current_host):
 
         host_vars = {}
-        prefixes_cache = self.get_prefixes_cache(self.api_url)
-        vrfs_cache = self.get_vrfs_cache(self.api_url)
+        prefixes_cache = self.get_prefixes_cache(self.api_url, self.api_token)
+        vrfs_cache = self.get_vrfs_cache(self.api_url, self.api_token)
 
         # Join interfaces data into network device
         if self._config(["features", "join_interfaces"]):
@@ -456,6 +475,7 @@ class NetboxJoinedInventory(object):
                 if vlan['vid'] in prefixes_cache:
                     prefix_data = prefixes_cache[vlan['vid']]
                     prefix_data['anycast_ip'] = vlan['anycast_ip']
+                    prefix_data['dhcp_relay_enabled'] = vlan['dhcp_relay_enabled']
                     prefix_data['status'] = vlan['status']
                     host_vars['configured_vlans'].append(prefix_data)
                     # Join configured vrfs into network device
@@ -472,11 +492,53 @@ class NetboxJoinedInventory(object):
                                                         })
             # sort the lists
             configured_vrf_list = list(configured_vrfs.values())
-            configured_vrf_list = sorted(configured_vrf_list, key=itemgetter('gateway'))
+            configured_vrf_list = sorted(configured_vrf_list, key=(lambda configured_vrf_list_: configured_vrf_list_['gateway'] if configured_vrf_list_['gateway'] else ""))
             host_vars['configured_vrfs'] = configured_vrf_list
             host_vars['configured_vlans'] = sorted(host_vars['configured_vlans'], key=itemgetter('vid'))
 
+            # Join cluster partner data e.g. clag backup ip
+            if self._config(["features", "join_cluster_partner_data"]):
+                try:
+                    if current_host.get("custom_fields").get("cluster_role"):
+                        role = current_host.get("custom_fields").get("cluster_role").get("label")
+                        if role == "master" or role == "slave":
+                            host_vars['cluster_partner_primary_ip'] = self.get_cluster_partner(current_host).get("primary_ip").get("address").split("/")[0]
+                            
+                            # Join bridge vids from current host and from cluster partner
+                            partner_host = self.get_cluster_partner(current_host)
+                            
+                            partner_vars = {}
+                            partner_vars['interfaces'] = self.join_interfaces(partner_host)
+                           
+                            current_host_vids = self.get_bridge_vids(host_vars['interfaces'])
+                            partner_host_vids = self.get_bridge_vids(partner_vars['interfaces'])
+                            cluster_bridge_vids = list(set().union(current_host_vids, partner_host_vids))
+                            cluster_bridge_vids.sort()
+                            host_vars['cluster_bridge_vids'] = cluster_bridge_vids
+
+                except:
+                    print("Error getting partner_primary_ip. Please verify device cluster_role and peerlink_mac.")
+                    raise
+
         return host_vars
+
+    def get_cluster_partner(self, current_host):
+        peerlink_mac = current_host.get("custom_fields").get("peerlink_mac")
+        securityblock = current_host.get("custom_fields").get("securityblock")
+
+        netbox_hosts_list = self.get_hosts_list(self.api_url, self.api_token, self.host)
+        partner_host = None
+        if netbox_hosts_list:
+            for i_host in netbox_hosts_list:
+                temp_peerlink_mac = i_host.get("custom_fields").get("peerlink_mac") 
+                temp_peersecurityblock = i_host.get("custom_fields").get("securityblock")
+
+                if temp_peerlink_mac == peerlink_mac and securityblock == temp_peersecurityblock:
+                    if not i_host.get("name") == current_host.get("name"):
+                        assert(temp_peerlink_mac is not None), "This host must be a cluster member and have a peerlink_mac"
+                        partner_host = i_host
+                        break
+        return partner_host
 
     def get_bridge_vids(self, interfaces_dict):
         bridge_vids_list = []
@@ -593,20 +655,23 @@ class NetboxJoinedInventory(object):
                 raw_vlans = self.get_vlan_list(self.api_url, self.api_token, vlan_domain=vlan_domain['label'])
 
                 for raw_vlan in raw_vlans:
-                    # TODO: ignore when status not active
                     # join vlan
+                    vlan_dict = ({ "vid": raw_vlan['vid'],
+                                       "name": raw_vlan['name'],
+                                       "status": raw_vlan['status']["label"],
+                                    })
                     if "anycast_ip" in raw_vlan['custom_fields']:
-                        vlan_list.append({ "vid": raw_vlan['vid'],
-                                       "name": raw_vlan['name'],
-                                       "status": raw_vlan['status']["label"],
-                                       "anycast_ip": raw_vlan['custom_fields']['anycast_ip']
-                                    })
+                        vlan_dict["anycast_ip"] = raw_vlan['custom_fields']['anycast_ip']
                     else:
-                        vlan_list.append({ "vid": raw_vlan['vid'],
-                                       "name": raw_vlan['name'],
-                                       "status": raw_vlan['status']["label"],
-                                       "anycast_ip": None
-                                    })
+                        vlan_dict["anycast_ip"] = None
+                    if "dhcp_relay_enabled" in raw_vlan['custom_fields']:
+                        if raw_vlan['custom_fields']['dhcp_relay_enabled'] is None or raw_vlan['custom_fields']['dhcp_relay_enabled'] is False:
+                            vlan_dict["dhcp_relay_enabled"] = False
+                        else:
+                            vlan_dict["dhcp_relay_enabled"] = True
+                    else:
+                        vlan_dict["dhcp_relay_enabled"] = False # DB migration
+                    vlan_list.append(vlan_dict)
                 
         return vlan_list
 
