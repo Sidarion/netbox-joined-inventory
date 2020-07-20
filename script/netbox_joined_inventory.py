@@ -603,16 +603,12 @@ class NetboxJoinedInventory(object):
 
             # Try to generate clag-id out of interface name
             clag_id = None
-            if raw_interface['form_factor']['label'] == "Link Aggregation Group (LAG)":
-                if_name = raw_interface['name']
-                if re.match('.*[0-9][0-9]$', if_name, flags=0):
-                    clag_id = if_name[-2:]
-                elif re.match('.*[0-9]$', if_name, flags=0):
-                    clag_id = if_name[-1:]
+            if raw_interface['lag'] is not None:
+                clag_id = raw_interface['lag']['name']
 
             # Try to generate vid out of interface name of virtual interfaces
             vif_vid = None
-            if raw_interface['form_factor']['label'] == "Virtual":
+            if raw_interface['type']['value'] == "virtual":
                 if_name = raw_interface['name']
                 assert (re.match('^vlan[0-9]+', if_name, flags=0) or if_name == "lo"), "Wrong syntax of virtual interface " + if_name
                 if if_name.startswith("vlan"):
@@ -632,7 +628,7 @@ class NetboxJoinedInventory(object):
                         'lag' : lag,
                         'clag_id' : clag_id,
                         'bond_slaves': bond_dict[raw_interface['name']],
-                        'form_factor' : raw_interface['form_factor']['label'],
+                        'type' : raw_interface['type']['value'],
                         'vid' : vif_vid
             })
         return interfaces
