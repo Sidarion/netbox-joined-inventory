@@ -24,9 +24,7 @@ except ImportError:
 
 # allow requests to access the local certificate bundle
 ca_file = 'ca-certificates.crt' if 'debian' in [distro.id(), distro.like()] else 'ca-bundle.crt'
-os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(
-        '/etc/ssl/certs/',
-            ca_file)
+os.environ.setdefault('REQUESTS_CA_BUNDLE', os.path.join('/etc/ssl/certs/', ca_file))
 
 try:
     import requests
