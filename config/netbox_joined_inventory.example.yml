@@ -27,6 +27,9 @@ netbox:
         # Required per vid: VLAN_domain, anycast_ip, vrf in prefix
         join_vlan_roles: True
 
+        # Join cluster partner data e.g. clag backup ip.
+        join_cluster_partner_data: True
+
     # Groups to create in inventory file
     #
     # The inventory file will contain a section for each
