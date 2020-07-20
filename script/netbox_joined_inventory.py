@@ -12,7 +12,6 @@ import re
 import time
 from pathlib import Path
 import yaml
-import jinja2
 import argparse
 from operator import itemgetter
 
@@ -22,7 +21,6 @@ except ImportError:
     from backports.functools_lru_cache import lru_cache
 
 # allow requests to access the local certificate bundle
-import os
 import platform
 
 ca_file = 'ca-certificates.crt' if (platform.dist()[0] == 'debian' or platform.dist()[0] == 'Ubuntu') else 'ca-bundle.crt'
