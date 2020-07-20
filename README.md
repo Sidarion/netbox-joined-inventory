@@ -145,16 +145,16 @@ like in the Netbox web gui:
 ### Adding a device
 
 <img src="images/NetBoxAddDevice1.png" alt="Add device" height="200">
-<img src="images/NetBoxAddDevice2.png" alt="Network device custom attribute" height="200">  
+<img src="images/NetBoxAddDevice2.png" alt="Network device custom attribute" height="200">
 
 
 ### Interfaces in a device
 
 <img src="images/NetBoxAddDeviceIF1.png" alt="interfaces" height="200">
-<img src="images/NetBoxAddDeviceIF2.png" alt="bond interfaces" height="200">  
+<img src="images/NetBoxAddDeviceIF2.png" alt="bond interfaces" height="200">
 
 
 ### VLANs and prefixes
 
 <img src="images/NetBoxVLAN.png" alt="VLANs" height="200">
-<img src="images/NetBoxPrefixes.png" alt="Prefixes" height="200">  
+<img src="images/NetBoxPrefixes.png" alt="Prefixes" height="200">
