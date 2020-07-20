@@ -446,7 +446,7 @@ class NetboxJoinedInventory(object):
                 server_name = current_host.get("name")
                 self.add_host_to_inventory(self.group_by, inventory_dict, current_host)
                 host_vars = self.get_host_vars(current_host, self.host_vars)
-                
+
                 # handle networking devices
                 if self._config(["features", "join_interfaces"]) or self._config(["features", "join_vlan_roles"]):
                     host_vars.update(self.generate_networking_host_vars(current_host))
@@ -482,7 +482,7 @@ class NetboxJoinedInventory(object):
                     if prefixes_cache[vlan['vid']]['vrf'] in vrfs_cache:
                         configured_vrfs[prefixes_cache[vlan['vid']]['vrf']] = vrfs_cache[prefixes_cache[vlan['vid']]['vrf']]
                     #else:
-                    #    print("    WARN: missing vrf for vlan id " + str(vlan['vid']))    
+                    #    print("    WARN: missing vrf for vlan id " + str(vlan['vid']))
                 else:
                     # no prefix found for VLAN ID
                     #print("    WARN: missing prefix for vlan id " + str(vlan['vid']))
@@ -503,13 +503,13 @@ class NetboxJoinedInventory(object):
                         role = current_host.get("custom_fields").get("cluster_role").get("label")
                         if role == "master" or role == "slave":
                             host_vars['cluster_partner_primary_ip'] = self.get_cluster_partner(current_host).get("primary_ip").get("address").split("/")[0]
-                            
+
                             # Join bridge vids from current host and from cluster partner
                             partner_host = self.get_cluster_partner(current_host)
-                            
+
                             partner_vars = {}
                             partner_vars['interfaces'] = self.join_interfaces(partner_host)
-                           
+
                             current_host_vids = self.get_bridge_vids(host_vars['interfaces'])
                             partner_host_vids = self.get_bridge_vids(partner_vars['interfaces'])
                             cluster_bridge_vids = list(set().union(current_host_vids, partner_host_vids))
@@ -530,7 +530,7 @@ class NetboxJoinedInventory(object):
         partner_host = None
         if netbox_hosts_list:
             for i_host in netbox_hosts_list:
-                temp_peerlink_mac = i_host.get("custom_fields").get("peerlink_mac") 
+                temp_peerlink_mac = i_host.get("custom_fields").get("peerlink_mac")
                 temp_peersecurityblock = i_host.get("custom_fields").get("securityblock")
 
                 if temp_peerlink_mac == peerlink_mac and securityblock == temp_peersecurityblock:
@@ -557,7 +557,7 @@ class NetboxJoinedInventory(object):
         """ For network devices try to join the interfaces """
         #print("    Getting interfaces for " + current_host['name'])
         #raw_interfaces = self.get_interfaces_list(self.api_url, self.api_token, specific_id=current_host.get("id"))
-        
+
         all_interfaces = self.get_interfaces_list(self.api_url, self.api_token)
         raw_interfaces = []
         for interface in all_interfaces:
@@ -672,7 +672,7 @@ class NetboxJoinedInventory(object):
                     else:
                         vlan_dict["dhcp_relay_enabled"] = False # DB migration
                     vlan_list.append(vlan_dict)
-                
+
         return vlan_list
 
 
@@ -693,7 +693,7 @@ class NetboxJoinedInventory(object):
         print(json.dumps(result, indent=4))
 
 
-    # writing inventory 
+    # writing inventory
     def write_ini_invetory(self, inv_dict):
         """ Writing an ini-like file with groups as sections"""
         ini = "# inventory ini\n"
