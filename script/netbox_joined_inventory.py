@@ -193,7 +193,7 @@ class NetboxJoinedInventory(object):
     def get_vlan_list(self, api_url, api_token=None, vlan_domain=None):
         """Retrieves vlan list that are attached to a device."""
         print("Getting  VLANs to populate cache for vlan_domain " + str(vlan_domain))
-        api_url = str(api_url) + "/api/ipam/vlans/"
+        api_url = str(api_url) + "api/ipam/vlans/"
         api_url_params = {}
         vlan_list = []
         if vlan_domain != None and vlan_domain != '':
@@ -205,7 +205,7 @@ class NetboxJoinedInventory(object):
     def get_prefixes_cache(self, api_url, api_token=None):
         """Retrieves prefixes list that are attached to a device."""
         print("Getting all prefixes to populate cache")
-        api_url = str(api_url) + "/api/ipam/prefixes/"
+        api_url = str(api_url) + "api/ipam/prefixes/"
         api_url_params = {}
         prefixes_list = self.get_items_from_api(api_url, api_token, api_url_params)
 
@@ -228,7 +228,7 @@ class NetboxJoinedInventory(object):
     def get_vrfs_cache(self, api_url, api_token=None):
         """Retrieves vrfs list that are attached to a device."""
         print("Getting all VRFs to populate cache")
-        api_url = str(api_url) + "/api/ipam/vrfs/"
+        api_url = str(api_url) + "api/ipam/vrfs/"
         api_url_params = {}
         vrfs_list = self.get_items_from_api(api_url, api_token, api_url_params)
 
@@ -290,8 +290,8 @@ class NetboxJoinedInventory(object):
             # Get api output data.
             api_output_data = api_output.json()
 
-            #The retreival of data is paginated to optimize the network footprint. The method follows the "next" field within the netbox-api's reply
-            #to load all pages of data. Each page corresponds to an entry in the list which is returned.
+            # The retrieval of data is paginated to optimize the network footprint. The method follows the "next" field within the netbox-api's reply
+            # to load all pages of data. Each page corresponds to an entry in the list which is returned.
             if isinstance(api_output_data, dict) and "results" in api_output_data:
                 items_list += api_output_data["results"]
                 api_url = api_output_data["next"]
