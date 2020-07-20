@@ -539,7 +539,7 @@ class NetboxJoinedInventory(object):
     def get_bridge_vids(self, interfaces_dict):
         bridge_vids_list = []
         for interface in interfaces_dict:
-            #print released.get("iphone 3G", "none")
+            # print released.get("iphone 3G", "none")
             if interface['untagged_vlan'] is not None:
                 if interface['untagged_vlan'] not in bridge_vids_list:
                     bridge_vids_list.append(interface['untagged_vlan'])
@@ -576,7 +576,7 @@ class NetboxJoinedInventory(object):
 
             # VLANs
             untagged_vlan = None
-            if raw_interface ['untagged_vlan'] is not None:
+            if raw_interface['untagged_vlan'] is not None:
                 untagged_vlan = self._get_value_by_path(raw_interface, ['untagged_vlan', 'vid'])
             tagged_vlans = []
             if raw_interface['tagged_vlans'] is not None:
