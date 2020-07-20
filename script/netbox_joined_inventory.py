@@ -15,15 +15,15 @@ import yaml
 import argparse
 from operator import itemgetter
 
+import distro
+
 try:
     from functools import lru_cache
 except ImportError:
     from backports.functools_lru_cache import lru_cache
 
 # allow requests to access the local certificate bundle
-import platform
-
-ca_file = 'ca-certificates.crt' if (platform.dist()[0] == 'debian' or platform.dist()[0] == 'Ubuntu') else 'ca-bundle.crt'
+ca_file = 'ca-certificates.crt' if 'debian' in [distro.id(), distro.like()] else 'ca-bundle.crt'
 os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(
         '/etc/ssl/certs/',
             ca_file)
