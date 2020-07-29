@@ -18,14 +18,17 @@ netbox:
     # Enable join features for host_vars files
     features:
         # Join interfaces into devices
-        # True will report a list of interfaces of each device and 
+        # True will report a list of interfaces of each device and
         # populate the attributes of each interface in the host_vars.
         join_interfaces: True
         # Join VLANs, VRF, Anycast IP over Prefix/VLAN Role into devices
-        # True will report a list of configured_vlans of each device and 
+        # True will report a list of configured_vlans of each device and
         # populate the attributes of each VLAN in the host_vars.
         # Required per vid: VLAN_domain, anycast_ip, vrf in prefix
         join_vlan_roles: True
+
+        # Join cluster partner data e.g. clag backup ip.
+        join_cluster_partner_data: True
 
     # Groups to create in inventory file
     #
@@ -62,4 +65,3 @@ netbox:
             cluster_role: cluster_role
             clagd_vxlan_anycast_ip: clagd_vxlan_anycast_ip
             peerlink_mac: peerlink_mac
-

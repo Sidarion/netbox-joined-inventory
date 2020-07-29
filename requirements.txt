@@ -20,7 +20,7 @@
 #           - clagd_vxlan_anycast_ip (CLAG Anycast IP is the Active-Active VTEP Anycast IP)
 #           - peerlink_mac   (Peerlink MLAG configuration: Each pair must have a unique system MAC address.)
 
-#       - On an network device e.g. leaf 
+#       - On an network device e.g. leaf
 #         the following fields should be populated
 #         TODO: Make maskarated screenshots for documentation
 #         - Name
@@ -45,3 +45,4 @@
 # -------------------------------
 pyyaml>=3.11
 requests
+distro

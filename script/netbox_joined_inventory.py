@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 # Copyright: (c) 2018, Mario Gersbach <https://www.sidarion.ch/>
@@ -12,9 +12,10 @@ import re
 import time
 from pathlib import Path
 import yaml
-import jinja2
 import argparse
 from operator import itemgetter
+
+import distro
 
 try:
     from functools import lru_cache
@@ -22,13 +23,8 @@ except ImportError:
     from backports.functools_lru_cache import lru_cache
 
 # allow requests to access the local certificate bundle
-import os
-import platform
-
-ca_file = 'ca-certificates.crt' if (platform.dist()[0] == 'debian' or platform.dist()[0] == 'Ubuntu') else 'ca-bundle.crt'
-os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(
-        '/etc/ssl/certs/',
-            ca_file)
+ca_file = 'ca-certificates.crt' if 'debian' in [distro.id(), distro.like()] else 'ca-bundle.crt'
+os.environ.setdefault('REQUESTS_CA_BUNDLE', os.path.join('/etc/ssl/certs/', ca_file))
 
 try:
     import requests
@@ -197,7 +193,7 @@ class NetboxJoinedInventory(object):
     def get_vlan_list(self, api_url, api_token=None, vlan_domain=None):
         """Retrieves vlan list that are attached to a device."""
         print("Getting  VLANs to populate cache for vlan_domain " + str(vlan_domain))
-        api_url = str(api_url) + "/api/ipam/vlans/"
+        api_url = str(api_url) + "api/ipam/vlans/"
         api_url_params = {}
         vlan_list = []
         if vlan_domain != None and vlan_domain != '':
@@ -209,7 +205,7 @@ class NetboxJoinedInventory(object):
     def get_prefixes_cache(self, api_url, api_token=None):
         """Retrieves prefixes list that are attached to a device."""
         print("Getting all prefixes to populate cache")
-        api_url = str(api_url) + "/api/ipam/prefixes/"
+        api_url = str(api_url) + "api/ipam/prefixes/"
         api_url_params = {}
         prefixes_list = self.get_items_from_api(api_url, api_token, api_url_params)
 
@@ -232,7 +228,7 @@ class NetboxJoinedInventory(object):
     def get_vrfs_cache(self, api_url, api_token=None):
         """Retrieves vrfs list that are attached to a device."""
         print("Getting all VRFs to populate cache")
-        api_url = str(api_url) + "/api/ipam/vrfs/"
+        api_url = str(api_url) + "api/ipam/vrfs/"
         api_url_params = {}
         vrfs_list = self.get_items_from_api(api_url, api_token, api_url_params)
 
@@ -294,8 +290,8 @@ class NetboxJoinedInventory(object):
             # Get api output data.
             api_output_data = api_output.json()
 
-            #The retreival of data is paginated to optimize the network footprint. The method follows the "next" field within the netbox-api's reply
-            #to load all pages of data. Each page corresponds to an entry in the list which is returned.
+            # The retrieval of data is paginated to optimize the network footprint. The method follows the "next" field within the netbox-api's reply
+            # to load all pages of data. Each page corresponds to an entry in the list which is returned.
             if isinstance(api_output_data, dict) and "results" in api_output_data:
                 items_list += api_output_data["results"]
                 api_url = api_output_data["next"]
@@ -446,7 +442,7 @@ class NetboxJoinedInventory(object):
                 server_name = current_host.get("name")
                 self.add_host_to_inventory(self.group_by, inventory_dict, current_host)
                 host_vars = self.get_host_vars(current_host, self.host_vars)
-                
+
                 # handle networking devices
                 if self._config(["features", "join_interfaces"]) or self._config(["features", "join_vlan_roles"]):
                     host_vars.update(self.generate_networking_host_vars(current_host))
@@ -482,7 +478,7 @@ class NetboxJoinedInventory(object):
                     if prefixes_cache[vlan['vid']]['vrf'] in vrfs_cache:
                         configured_vrfs[prefixes_cache[vlan['vid']]['vrf']] = vrfs_cache[prefixes_cache[vlan['vid']]['vrf']]
                     #else:
-                    #    print("    WARN: missing vrf for vlan id " + str(vlan['vid']))    
+                    #    print("    WARN: missing vrf for vlan id " + str(vlan['vid']))
                 else:
                     # no prefix found for VLAN ID
                     #print("    WARN: missing prefix for vlan id " + str(vlan['vid']))
@@ -503,13 +499,13 @@ class NetboxJoinedInventory(object):
                         role = current_host.get("custom_fields").get("cluster_role").get("label")
                         if role == "master" or role == "slave":
                             host_vars['cluster_partner_primary_ip'] = self.get_cluster_partner(current_host).get("primary_ip").get("address").split("/")[0]
-                            
+
                             # Join bridge vids from current host and from cluster partner
                             partner_host = self.get_cluster_partner(current_host)
-                            
+
                             partner_vars = {}
                             partner_vars['interfaces'] = self.join_interfaces(partner_host)
-                           
+
                             current_host_vids = self.get_bridge_vids(host_vars['interfaces'])
                             partner_host_vids = self.get_bridge_vids(partner_vars['interfaces'])
                             cluster_bridge_vids = list(set().union(current_host_vids, partner_host_vids))
@@ -530,7 +526,7 @@ class NetboxJoinedInventory(object):
         partner_host = None
         if netbox_hosts_list:
             for i_host in netbox_hosts_list:
-                temp_peerlink_mac = i_host.get("custom_fields").get("peerlink_mac") 
+                temp_peerlink_mac = i_host.get("custom_fields").get("peerlink_mac")
                 temp_peersecurityblock = i_host.get("custom_fields").get("securityblock")
 
                 if temp_peerlink_mac == peerlink_mac and securityblock == temp_peersecurityblock:
@@ -543,7 +539,7 @@ class NetboxJoinedInventory(object):
     def get_bridge_vids(self, interfaces_dict):
         bridge_vids_list = []
         for interface in interfaces_dict:
-            #print released.get("iphone 3G", "none")
+            # print released.get("iphone 3G", "none")
             if interface['untagged_vlan'] is not None:
                 if interface['untagged_vlan'] not in bridge_vids_list:
                     bridge_vids_list.append(interface['untagged_vlan'])
@@ -557,7 +553,7 @@ class NetboxJoinedInventory(object):
         """ For network devices try to join the interfaces """
         #print("    Getting interfaces for " + current_host['name'])
         #raw_interfaces = self.get_interfaces_list(self.api_url, self.api_token, specific_id=current_host.get("id"))
-        
+
         all_interfaces = self.get_interfaces_list(self.api_url, self.api_token)
         raw_interfaces = []
         for interface in all_interfaces:
@@ -580,7 +576,7 @@ class NetboxJoinedInventory(object):
 
             # VLANs
             untagged_vlan = None
-            if raw_interface ['untagged_vlan'] is not None:
+            if raw_interface['untagged_vlan'] is not None:
                 untagged_vlan = self._get_value_by_path(raw_interface, ['untagged_vlan', 'vid'])
             tagged_vlans = []
             if raw_interface['tagged_vlans'] is not None:
@@ -607,16 +603,12 @@ class NetboxJoinedInventory(object):
 
             # Try to generate clag-id out of interface name
             clag_id = None
-            if raw_interface['form_factor']['label'] == "Link Aggregation Group (LAG)":
-                if_name = raw_interface['name']
-                if re.match('.*[0-9][0-9]$', if_name, flags=0):
-                    clag_id = if_name[-2:]
-                elif re.match('.*[0-9]$', if_name, flags=0):
-                    clag_id = if_name[-1:]
+            if raw_interface['lag'] is not None:
+                clag_id = raw_interface['lag']['name']
 
             # Try to generate vid out of interface name of virtual interfaces
             vif_vid = None
-            if raw_interface['form_factor']['label'] == "Virtual":
+            if raw_interface['type']['value'] == "virtual":
                 if_name = raw_interface['name']
                 assert (re.match('^vlan[0-9]+', if_name, flags=0) or if_name == "lo"), "Wrong syntax of virtual interface " + if_name
                 if if_name.startswith("vlan"):
@@ -636,7 +628,7 @@ class NetboxJoinedInventory(object):
                         'lag' : lag,
                         'clag_id' : clag_id,
                         'bond_slaves': bond_dict[raw_interface['name']],
-                        'form_factor' : raw_interface['form_factor']['label'],
+                        'type' : raw_interface['type']['value'],
                         'vid' : vif_vid
             })
         return interfaces
@@ -672,7 +664,7 @@ class NetboxJoinedInventory(object):
                     else:
                         vlan_dict["dhcp_relay_enabled"] = False # DB migration
                     vlan_list.append(vlan_dict)
-                
+
         return vlan_list
 
 
@@ -693,7 +685,7 @@ class NetboxJoinedInventory(object):
         print(json.dumps(result, indent=4))
 
 
-    # writing inventory 
+    # writing inventory
     def write_ini_invetory(self, inv_dict):
         """ Writing an ini-like file with groups as sections"""
         ini = "# inventory ini\n"
